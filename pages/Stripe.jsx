@@ -1,19 +1,39 @@
 'use client'
 
-
 import React, { useState } from 'react'
 import { loadStripe } from "@stripe/stripe-js";
 
 function Stripe() {
 
 const [paymentError,setPaymentError] = useState(null)
+const [priceId, setPriceId] = useState(null);
+
+const handleCreatePrice = async () => {
+    try {
+      // Fetch Price ID from your backend or any other source
+      const response = await fetch('/api/createPrice', {
+        method: 'POST',
+      });
+      const data = await response.json();
+      setPriceId(data.priceId); // Set the Price ID state
+    } catch (error) {
+      console.error('Error creating Price:', error);
+      setPaymentError('An error occurred. Please try again later.');
+    }
+  };
+
     
 const handleClick = async () => {
+    if (!priceId) {
+        // If Price ID is not available, create it first
+        await handleCreatePrice();
+        return;
+      }
     try {
       const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
   
       const { error } = await stripe?.redirectToCheckout({
-        lineItems: [{ price: "price_1PBahDSEX8loY6rLD4fy6LL0", quantity: 1 }],
+        lineItems: [{ price: priceId, quantity: 1 }],
         mode: "payment",
         successUrl: "http://localhost:3000/success",
         cancelUrl: "http://localhost:3000/cancel",
@@ -37,7 +57,7 @@ const handleClick = async () => {
             Stripe checkout
         </h1>
         {paymentError && <p>Error: {paymentError}</p>}
-        <button onClick={handleClick} className='p-2 border border-1 border-gray-500 mt-5 bg-green-400 rounded'>CHECK OUT</button>
+        <button onClick={handleClick} className='p-2 border border-1 border-gray-500 mt-5 bg-green-400 rounded'>Get Quote</button>
     </div>
   )
 }
