@@ -1,52 +1,90 @@
-
 import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { usePathname } from "next/navigation";
 import Navbar from "../NavbarMobile";
-import { FaArrowRight, FaWhatsapp } from "react-icons/fa";
+import { FaArrowRight, FaRegUser, FaWhatsapp } from "react-icons/fa";
 import { LuPhone } from "react-icons/lu";
 import { MdOutlineEmail } from "react-icons/md";
 import { product } from "../../public/data/phoneNumber";
+import { useRouter } from "next/router";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "@/firebase/firebase.config";
 
 const HeaderTop = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedCountryCode] = useState(process.env.NEXT_PUBLIC_COUNTRY_CODE);
-  const [ scrolled, setScrolled ] = useState(false);
   const path = usePathname();
 
-  useEffect(()=>{
-    const handleScroll = ()=>{
-      if(window.scrollY > 60){
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedCountryCode] = useState(process.env.NEXT_PUBLIC_COUNTRY_CODE);
+  const [scrolled, setScrolled] = useState(false);
+  const [profileDropdown,setProfileDropdown] = useState(false);
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      }
+      //  else {
+      //   router.push("/login");
+      // }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      router.push("/");
+    } catch (error) {
+      console.error("Error logging out:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 60) {
         setScrolled(true);
-      }else {
+      } else {
         setScrolled(false);
       }
     };
 
-    window.addEventListener('scroll',handleScroll)
+    window.addEventListener("scroll", handleScroll);
 
-    return() =>{
-    window.addEventListener('scroll',handleScroll)
-
-    }
-  },[])
+    return () => {
+      window.addEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const toggleOffCanvas = () => {
     setIsOpen((prevState) => !prevState);
   };
 
+  const toggleProfileDropdown = () => {
+    setProfileDropdown((prevState) => !prevState);
+  };
+
   useEffect(() => {
     setIsOpen(false);
+    setProfileDropdown(false);
   }, [path]);
 
   return (
     <>
-      {product.map((items,key) => {
+      {product.map((items, key) => {
         return (
           <div
-            className={`${scrolled && "bg-blue-950 transition ease-in-out duration-500"} bg-[var(--bg-1)] fixed lg:sticky top-0 left-0 right-0 shadow z-[52]`}
+            className={`${
+              scrolled && "bg-blue-950 transition ease-in-out duration-500"
+            } bg-[var(--bg-1)] fixed lg:sticky top-0 left-0 right-0 shadow z-[52]`}
             key={key}
           >
             <div className="container flex justify-between items-center  py-1 lg:py-2  gap-2 lg:gap-1  xl:gap-20 sm:gap-[3.5rem] mx-auto">
@@ -61,12 +99,20 @@ const HeaderTop = () => {
                 />
               </Link>
               <div className="flex flex-col justify-center items-center gap-1">
-
-                <span className={`${scrolled && "text-white"} hidden text-center text-[10px] text-gray-700 max-[425px]:ml-[2.2rem] max-[768px]:block max-[768px]:ml-[2rem] `} style={{fontSize:"8.4px"}}>
+                <span
+                  className={`${
+                    scrolled && "text-white"
+                  } hidden text-center text-[10px] text-gray-700 max-[425px]:ml-[2.2rem] max-[768px]:block max-[768px]:ml-[2rem] `}
+                  style={{ fontSize: "8.4px" }}
+                >
                   Do you need urgent support?
-                  </span>
+                </span>
 
-                <div className={`${scrolled && "text-white"} flex justify-evenly gap-10 divide-x-[2px] text-gray-700 max-[425px]:gap-4 max-[425px]:ml-[2rem]`}>
+                <div
+                  className={`${
+                    scrolled && "text-white"
+                  } flex justify-evenly gap-10 divide-x-[2px] text-gray-700 max-[425px]:gap-4 max-[425px]:ml-[2rem]`}
+                >
                   <span className="text-xs flex flex-col justify-center items-start border-r p-2 border-gray-400 max-[1024px]:hidden">
                     <span>Do you need urgent support?</span>
                     <span className="">Contact Us Now:</span>
@@ -127,18 +173,50 @@ const HeaderTop = () => {
               </div>
               <div className="flex items-center gap-3 px-2 xl:px-2 sm:hidden lg:flex">
                 <button className="btn-primary px-6 hidden  md:block rounded-[10px] h-[45px] transition active:transform active:bg-gray-500 ">
-                  <Link href="/packages" className="flex items-center">
+                  <Link href={user? "/packages": "/login"} className="flex items-center">
                     Get Quote
                     <FaArrowRight className="ml-2 text-sm" />
                   </Link>
                 </button>
+                <button onClick={toggleProfileDropdown}>
+                  {user ? (
+                    <p>{user?.email}</p>
+                  ): (
+                    <i>
+                      <FaRegUser />
+                    </i>
+                  )}
+                  {profileDropdown && (
+                    <div className="absolute top-[50px] right-10 bg-white border border-gray-200 rounded-md shadow-md">
+                      {!user ? (
+                        <Link href="/login">
+                        <button className="block w-full px-4 py-2 text-gray-700 text-sm hover:bg-gray-100">
+                        Log in
+                      </button>
+                        </Link>
+
+                      ):(
+                      <button onClick={handleLogout} className="block w-full px-4 py-2 text-gray-700 text-sm hover:bg-gray-100">
+                        Logout
+                      </button>
+                      )}
+                    </div>
+                  )}
+                </button>
+                {/* <button onClick={handleLogout} className="btn-primary px-6 hidden  md:block rounded-[10px] h-[45px] transition active:transform active:bg-gray-500 ">
+                  Logout
+                </button> */}
               </div>
               <div className="lg:hidden p-3">
                 <button
                   onClick={toggleOffCanvas}
                   className={`flex flex-col items-center gap-1 py-2 px-3 rounded-md max-[375px]:p-0`}
                 >
-                  <Bars3Icon className={`${scrolled && "text-white"} w-10 h-10 text-gray-700`} />
+                  <Bars3Icon
+                    className={`${
+                      scrolled && "text-white"
+                    } w-10 h-10 text-gray-700`}
+                  />
                 </button>
                 <div
                   className={`fixed top-0 left-0 h-screen w-full bg-white shadow-lg z-50 transform transition-transform ease-in-out duration-300 ${

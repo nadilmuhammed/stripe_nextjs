@@ -1,9 +1,44 @@
 import Link from "next/link";
 import { product } from "../../public/data/phoneNumber";
+import { useRouter } from "next/router";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useEffect, useState } from "react";
+import HeaderTop from "@/components/headertop/HeaderTophome1";
+import CommonHeader from "@/components/CommonHeader";
+import Footer from "@/components/footer/Footer";
+import { auth } from "@/firebase/firebase.config";
 
 
 const Hero = () => {
+  const router = useRouter();
+  const isPackagePage = router.pathname === "/packages";
+
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUser(user);
+      }
+      //  else {
+      //   router.push("/login");
+      // }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+
   return (
+    <>
+       {!isPackagePage && (
+        <>
+          <HeaderTop/>
+          <CommonHeader />
+        </>
+      )}
     <section className="relative bg-[var(--bg-1)] border-t lg:border-t-0">
       <div className="pt-[70px] sm:pt-[100px] md:pt-[150px] xl:pt-[120px] pb-16 h-full px-3">
         <div className="container">
@@ -19,7 +54,7 @@ const Hero = () => {
 
               <div className="flex items-center gap-5">
                 <button className="bg-primary text-white rounded-lg transition-all ease-in-out active:bg-gray-500 w-[190px] h-[50px]">
-                  <Link href="/packages" >
+                  <Link  href={user? "/packages": "/login"}  >
                   Get Quote <i className="las la-arrow-right"></i>
                   </Link>
                 </button>
@@ -43,6 +78,9 @@ const Hero = () => {
         </div>
       </div>
     </section>
+    <Footer />
+    </>
+
   );
 };
 
