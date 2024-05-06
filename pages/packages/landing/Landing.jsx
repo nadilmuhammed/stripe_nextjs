@@ -360,7 +360,7 @@ function Landing() {
                       className="cursor-pointer hover:bg-gray-200 transition duration-500 flex justify-between items-center gap-5 border border-1 border-gray-400 p-5 rounded w-full h-[18vh] md:w-[40%] md:h-[20vh] xl:w-[30%] xl:h-[15vh]"
                     >
                       <p>{items.name}</p>
-                      <p>${items.price} / word</p>
+                      <p className="whitespace-nowrap">${items.price} / word</p>
                     </div>
                   );
                 })}
