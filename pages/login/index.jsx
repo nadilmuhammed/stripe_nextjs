@@ -5,6 +5,7 @@ import { auth } from '@/firebase/firebase.config';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import { FaChevronLeft } from 'react-icons/fa';
 
 function Login() {
     const [loginPassword, setLoginPassword] = useState("");
@@ -21,6 +22,8 @@ function Login() {
           );
           const user = userCredential.user;
           if(user){
+            localStorage.setItem('token', user.accessToken);
+            localStorage.setItem('user', JSON.stringify(user));
             router.push("/")
             toast.success("Logged In")
           }
@@ -37,6 +40,10 @@ function Login() {
         login();
       };
   return (
+    <div>
+        <Link href="/">
+          <button className="p-2 bg-blue-600 text-white mt-5 ml-5 rounded"><FaChevronLeft /></button>
+        </Link>
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
     <div className="max-w-md w-full space-y-8">
       <div>
@@ -130,6 +137,7 @@ function Login() {
       <Link href="/register" className='text-[15px]'>Dont have an account?</Link>
     </div>
   </div>
+    </div>
   )
 }
 

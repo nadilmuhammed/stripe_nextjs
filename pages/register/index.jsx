@@ -16,7 +16,6 @@ function Register() {
   // const [loginPassword, setLoginPassword] = useState("");
   // const [loginEmail, setLoginEmail] = useState("");
 
-  const [user, setUser] = useState({});
   const router = useRouter();
 
   const register = async () => {
@@ -29,6 +28,8 @@ function Register() {
       const user = userCredential.user;
       console.log(user, "user");
       if(user){
+        localStorage.setItem('token', user.accessToken);
+        localStorage.setItem('user', JSON.stringify(user));
         router.push("/")
         toast.success("Registered")
       }

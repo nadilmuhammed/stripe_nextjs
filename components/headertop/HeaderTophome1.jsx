@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { usePathname } from "next/navigation";
 import Navbar from "../NavbarMobile";
-import { FaArrowRight, FaRegUser, FaWhatsapp } from "react-icons/fa";
+import { FaArrowRight, FaRegUser, FaUserPlus, FaWhatsapp } from "react-icons/fa";
 import { LuPhone } from "react-icons/lu";
 import { MdOutlineEmail } from "react-icons/md";
 import { product } from "../../public/data/phoneNumber";
@@ -20,6 +20,7 @@ const HeaderTop = () => {
   const [selectedCountryCode] = useState(process.env.NEXT_PUBLIC_COUNTRY_CODE);
   const [scrolled, setScrolled] = useState(false);
   const [profileDropdown,setProfileDropdown] = useState(false);
+  const [token, setToken] = useState(null);
 
   const [user, setUser] = useState(null);
 
@@ -27,10 +28,13 @@ const HeaderTop = () => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
+      } else {
+        const storedToken = localStorage.getItem('token');
+        setToken(storedToken);
+        if (!storedToken) {
+          router.push("/"); // Redirect to login if token is null
+        }
       }
-      //  else {
-      //   router.push("/login");
-      // }
     });
 
     return () => {
@@ -41,6 +45,8 @@ const HeaderTop = () => {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       setUser(null);
       router.push("/");
     } catch (error) {
@@ -173,17 +179,20 @@ const HeaderTop = () => {
               </div>
               <div className="flex items-center gap-3 px-2 xl:px-2 sm:hidden lg:flex">
                 <button className="btn-primary px-6 hidden  md:block rounded-[10px] h-[45px] transition active:transform active:bg-gray-500 ">
-                  <Link href={user? "/packages": "/login"} className="flex items-center">
+                  <Link href={user ? "/packages": "/login"} className="flex items-center">
                     Get Quote
                     <FaArrowRight className="ml-2 text-sm" />
                   </Link>
                 </button>
                 <button onClick={toggleProfileDropdown}>
                   {user ? (
-                    <p>{user?.email}</p>
+                    <i>
+                      <FaRegUser className={`${scrolled && "text-white"} text-gray-600 text-lg`}/>
+                    </i>
+                    // <p className={`${scrolled && "text-white"} text-gray-600`}>{user?.email}</p>
                   ): (
                     <i>
-                      <FaRegUser />
+                      <FaUserPlus className={`${scrolled && "text-white"} text-gray-600 text-lg`}/>
                     </i>
                   )}
                   {profileDropdown && (
@@ -196,9 +205,14 @@ const HeaderTop = () => {
                         </Link>
 
                       ):(
+                        <div className="p-3 flex flex-col gap-1">
+                        <div>
+                          <h3>{user?.email}</h3>
+                        </div>
                       <button onClick={handleLogout} className="block w-full px-4 py-2 text-gray-700 text-sm hover:bg-gray-100">
                         Logout
                       </button>
+                        </div>
                       )}
                     </div>
                   )}

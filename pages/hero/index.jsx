@@ -78,7 +78,6 @@ const Hero = () => {
         </div>
       </div>
     </section>
-    <Footer />
     </>
 
   );
