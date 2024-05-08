@@ -32,7 +32,7 @@ const HeaderTop = () => {
         const storedToken = localStorage.getItem('token');
         setToken(storedToken);
         if (!storedToken) {
-          router.push("/"); // Redirect to login if token is null
+          router.push("/"); // Redirect to home if token is null
         }
       }
     });
