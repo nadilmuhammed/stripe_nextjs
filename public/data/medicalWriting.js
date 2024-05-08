@@ -1,17 +1,17 @@
 export const medwriting = [
     {
         id: 1,
-        name: "Healthcare features",
+        name: "Healthcare Features",
         price:"0.8"
     },
     {
         id: 2,
-        name: "long format article ",
+        name: "Long Format Article ",
         price:"0.8"
     },
     {
         id:3,
-        name: "consumer health awareness articles",
+        name: "Consumer Health Awareness Articles",
         price:"0.8"
     },
     {

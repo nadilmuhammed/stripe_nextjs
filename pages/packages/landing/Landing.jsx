@@ -7,10 +7,27 @@ import TextField from "@mui/material/TextField";
 import Autocomplete from "@mui/material/Autocomplete";
 import { medwriting } from "@/public/data/medicalWriting.js";
 import Backdrop from "@mui/material/Backdrop";
-import CircularProgress from "@mui/material/CircularProgress";
-import Button from "@mui/material/Button";
-import styles from "./landing.module.css";
 import Card from "./Card";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import { styled } from "@mui/material/styles";
+import Button from "@mui/material/Button";
+import { GoFileSubmodule } from "react-icons/go";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
+
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
 
 function Landing() {
   const [servicePackage, setServicePackage] = useState(true);
@@ -18,7 +35,7 @@ function Landing() {
   const [translation, setTranslation] = useState(false);
   const [writing, setWriting] = useState(false);
   const [seelectedEditing, setSelectedEditing] = useState("" || false);
-  const [wordCount, setWordCount] = useState(0);
+  const [wordCount, setWordCount] = useState('');
   const [selectedAmount, setSelectedAmount] = useState("");
   const [showAmount, setShowAmount] = useState(false);
   const [checkedAmounts, setCheckedAmounts] = useState([]);
@@ -29,10 +46,22 @@ function Landing() {
   const [writingProceed, setWritingProceed] = useState(false);
   const [open, setOpen] = React.useState(false);
   const [languageOption, setLanguageOption] = useState("");
+
+  const [error,setError] = useState(false);
+
+
+
   const handleClose = () => {
     setOpen(false);
   };
   const handleOpen = () => {
+    if (!wordCount) {
+      setError(true);
+      setShowPopup(false);
+      return;
+    } else {
+      setError(false);
+    }
     setOpen(true);
   };
 
@@ -130,6 +159,17 @@ function Landing() {
   const handleProceed = (e) => {
     e.preventDefault();
     setShowAmount(true);
+    if (!wordCount) {
+      setError(true);
+      setShowPopup(false);
+      return;
+    } else {
+      setError(false);
+    }
+
+    setShowAmount(true);
+    setWritingProceed(true);
+    setShowPopup(true);
     // Find the first item in editData where wordCount is greater than or equal to the entered count
     const selectedEdit = editDataCount.find(
       (item) => item.wordCount >= wordCount
@@ -144,8 +184,7 @@ function Landing() {
 
   const handleWritingProceed = (e) => {
     e.preventDefault();
-    setWritingProceed(true);
-    setShowPopup(true)
+    handleProceed(e);
   };
 
   const handleCheckboxChange = (event) => {
@@ -402,6 +441,7 @@ function Landing() {
                         />
                         <span>words</span>
                       </div>
+                      {error && (<p className="text-red-500">Enter a number</p>)}
                       <div>
                         <button
                           onClick={handleWritingProceed}
@@ -440,14 +480,26 @@ function Landing() {
                 )} */}
                   <div className="mt-5">
                     <h1 className="text-2xl">Share Document Details</h1>
-                    <div className="flex flex-col mt-2">
-                      <span>Uplaod file to be editted</span>
-                      <input type="file" />
+                    <div className="mt-5">
+                    <Button
+                      component="label"
+                      role={undefined}
+                      variant="contained"
+                      tabIndex={-1}
+                      startIcon={<GoFileSubmodule />}
+                      sx={{
+                        padding:"10px 20px 10px 20px"
+                      }}
+                    >
+                      Upload files to be Editted
+                      <VisuallyHiddenInput type="file" />
+                    </Button>
                     </div>
-                    <div className="mt-5 flex flex-col">
+                    <div className="mt-10 flex flex-col">
                       <label htmlFor="">Type of Document</label>
-                      <div>
-                        <select name="" id="" className="p-2">
+                      <div className="mt-2">
+                        <select name="" id="" className="px-4 py-4 w-[300px] rounded outline-none bg-white border border-1 border-gray-300">
+                          <option value="" disabled hidden>Type of document</option>
                           <option value="">Abstarct</option>
                           <option value="">Case Report </option>
                           <option value="">Thesis/Disertion</option>
@@ -455,11 +507,10 @@ function Landing() {
                         </select>
                       </div>
                     </div>
-
-                    <div className="mt-5 flex flex-col">
+                    <div className="mt-10 flex flex-col">
                       <label htmlFor="">Subject area</label>
-                      <div>
-                        <select name="" id="" className="p-2">
+                      <div className="mt-2">
+                        <select name="" id="" className="px-4 py-4 w-[300px] rounded outline-none bg-white border border-1 border-gray-300">
                           <option value="">Abstarct</option>
                           <option value="">Case Report </option>
                           <option value="">Thesis/Disertion</option>
@@ -467,42 +518,58 @@ function Landing() {
                         </select>
                       </div>
                     </div>
-
-                    <div className="mt-5">
-                      <Autocomplete
-                        disablePortal
-                        id="combo-box-demo"
-                        options={top100Films}
-                        sx={{ width: 300 }}
-                        renderInput={(params) => (
-                          <TextField {...params} label="Subject area name" />
-                        )}
-                      />
-                    </div>
-                    <div className="mt-5">
-                      <label>Language Style</label>
+                    <div className="mt-10">
+                      <label>Language Style *</label>
                       <div className="mt-2 flex gap-5">
-                        <label className="flex items-center">
+                        <label className="flex items-center gap-2">
                           <input
                             type="radio"
                             value="american"
                             checked={languageOption === "american"}
                             onChange={handleOptionChange}
                           />
-                          American English
+                          <span>American English</span>
                         </label>
                         <br />
-                        <label className="flex items-center">
+                        <label className="flex items-center gap-2">
                           <input
                             type="radio"
                             value="british"
                             checked={languageOption === "british"}
                             onChange={handleOptionChange}
                           />
-                          British English
+                          <span>British English</span>
                         </label>
                       </div>
                     </div>
+                    <div className="mt-10">
+                      <label>Do you want free journal formatting for your document? *</label>
+                      <div className="mt-2 flex gap-5">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            value="american"
+                            checked={languageOption === "american"}
+                            onChange={handleOptionChange}
+                          />
+                          <span>Yes</span>
+                        </label>
+                        <br />
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            value="british"
+                            checked={languageOption === "british"}
+                            onChange={handleOptionChange}
+                          />
+                          <span>No</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="mt-10">
+                      <input type="text" placeholder="Nmae of Invoice" className="px-4 py-4 w-[300px] rounded outline-none bg-white border border-1 border-gray-300"/>
+                    </div>
+
                   </div>
                 </div>
               </form>
@@ -556,34 +623,36 @@ function Landing() {
                   }}
                   open={open}
                 >
-                  <Card handleClose={handleClose} />
+                  <Elements stripe={stripePromise}>
+                    <Card handleClose={handleClose} totalAmount={totalAmount} />
+                  </Elements>
                 </Backdrop>
               </div>
 
               {showPopup && (
                 <div className="hidden max-[768px]:block p-4 fixed bottom-0 left-0 right-0 border border-1 border-gray-400 w-[95%] mx-auto rounded-t-lg text-center rounded bg-white">
-                  <h3 className="text-xl font-[500] mb-4">Order Summary</h3>
+                  <h3 className="text-xl font-[500] mb-4 ">Order Summary</h3>
                   <p>${selectedWriting.price} / word</p>
-                {writingProceed ? (
-                  <div className="flex justify-center">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>Number of Words</th>
-                          <th>Price</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>{wordCount}</td>
-                          <td>${totalAmount}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  "No orders Yet"
-                )}
+                  {writingProceed ? (
+                    <div className="flex justify-center">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Number of Words</th>
+                            <th>Price</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>{wordCount}</td>
+                            <td>${totalAmount}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    "No orders Yet"
+                  )}
                   <div className="mt-6">
                     <button
                       type="submit"
@@ -594,17 +663,22 @@ function Landing() {
                     </button>
                   </div>
                   <Backdrop
-                  sx={{
-                    color: "#fff",
-                    position: "fixed",
-                    backdropFilter: "blur(8px)",
-                    // backgroundColor: "rgba(255, 255, 255, 0.5)",
-                    zIndex: (theme) => theme.zIndex.drawer + 1,
-                  }}
-                  open={open}
-                >
-                  <Card handleClose={handleClose} />
-                </Backdrop>
+                    sx={{
+                      color: "#fff",
+                      position: "fixed",
+                      backdropFilter: "blur(8px)",
+                      // backgroundColor: "rgba(255, 255, 255, 0.5)",
+                      zIndex: (theme) => theme.zIndex.drawer + 1,
+                    }}
+                    open={open}
+                  >
+                    <Elements stripe={stripePromise}>
+                      <Card
+                        handleClose={handleClose}
+                        totalAmount={totalAmount}
+                      />
+                    </Elements>
+                  </Backdrop>
                 </div>
               )}
             </div>
